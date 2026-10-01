@@ -13,7 +13,8 @@ export default async function PayslipPage({ params }: { params: Promise<{ id: st
   // Employees may only open their own slips; report others as missing.
   if (!slip || (user.role !== "ADMIN" && slip.employee_id !== user.id)) notFound();
   const employee = await getEmployee(slip.employee_id);
-  const m = buildSlipModel(slip, employee?.join_date ?? null);
+  const shown = employee ? { ...slip, emp_name: employee.name, emp_code: employee.emp_code } : slip;
+  const m = buildSlipModel(shown, employee?.join_date ?? null);
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">

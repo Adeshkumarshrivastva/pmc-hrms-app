@@ -12,7 +12,7 @@ import { checkOtp, sendOtp } from "@/lib/otp";
 import { normalizePhone } from "@/lib/phone";
 import {
   addDepartment, addDesignation, addHoliday, deleteAttendance, deleteHoliday, getAttendance, getEmployee, getEmployeeByEmail, getEmployeeByPhone,
-  clearLocation, getLeave, getPayslip, holidaysBetween, insertEmployee, insertLeave, listEmployees, punchIn, punchOut, saveLocation, savePayslip,
+  clearLocation, getLeave, getPayslip, holidaysBetween, insertEmployee, insertLeave, listEmployees, listPayslips, punchIn, punchOut, saveLocation, savePayslip,
   setLeaveStatus, updateEmployee, upsertAttendance,
 } from "@/lib/queries";
 import { isValidDate, parseDmy, isValidMonth, istLocalToIso, todayStr } from "@/lib/dates";
@@ -265,8 +265,11 @@ export async function generatePayslipsAction(fd: FormData) {
   if (!isValidMonth(month)) return;
   const only = Number(str(fd, "employee_id")) || null;
   const today = todayStr();
+  // "missing_only" keeps slips that already exist (and any edits made to them).
+  const have = fd.get("missing_only") ? new Set((await listPayslips({ month })).map((p) => p.employee_id)) : new Set<number>();
   for (const emp of await listEmployees({ activeOnly: true })) {
     if (only && emp.id !== only) continue;
+    if (have.has(emp.id)) continue;
     if (emp.join_date.slice(0, 7) > month) continue;
     const salary = await getMonthSalary(emp, month, today);
     await savePayslip(salaryToPayslip(emp, month, salary));

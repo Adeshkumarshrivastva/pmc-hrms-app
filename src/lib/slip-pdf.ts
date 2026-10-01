@@ -29,7 +29,8 @@ type Family = { font: PDFFont; ext: PDFFont };
 const fontFile = (file: string) => readFile(path.join(process.cwd(), "assets", "fonts", file));
 
 /** Renders a salary slip to PDF bytes; shared by the download route and the email action. */
-export async function buildSlipPdf(slip: Payslip, employee: Employee | null | undefined) {
+export async function buildSlipPdf(stored: Payslip, employee: Employee | null | undefined) {
+  const slip = employee ? { ...stored, emp_name: employee.name, emp_code: employee.emp_code } : stored;
   const model = buildSlipModel(slip, employee?.join_date ?? null);
 
   const pdf = await PDFDocument.create();
